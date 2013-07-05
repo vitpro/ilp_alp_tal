@@ -1,0 +1,23 @@
+\documentclass[11pt]{article}
+
+\usepackage{fullpage}
+
+\begin{document}
+
+\title{Notes: Prolog, ILP, ALP, TAL, ASP and examples}
+
+\author{Vitalii Protsenko}
+
+\date{\today}         % inserts today's date
+
+\maketitle
+
+\section{Prolog}
+
+\paragraph{}
+
+Based on rules, ie \texttt{dog(a).} means the fact \texttt{'a is a dog'}.
+Rules can be derived from other rules by implications \texttt{ :- } or, more naturally,  $\leftarrow$. For example we can write \texttt{animal(A) :- dog(A).}, which would mean \texttt{A is an animal $\leftarrow$ A is a dog}. Worth mentioning that A is a variable, meaning that $\forall A$ : $A$ is a dog $\rightarrow$ $A$ is an animal.
+
+
+\end{document}
