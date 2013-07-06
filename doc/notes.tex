@@ -10,7 +10,7 @@
 
 \author{Vitalii Protsenko}
 
-\date{\today}         % inserts today's date
+\date{}
 
 \maketitle
 
@@ -37,7 +37,7 @@ predecessor(X, Z) :-
 Notice that the base case is necessary if X is a direct parent of Z.\\Also, we need to be careful of infinite looping, as the rule \texttt{r(A) :- r(A).}, for example, is quite dangerous.
 
 \subsection{Variables}
-As seen before, variables always start with an upper-case letter or and underscore eg \texttt{\_x} is a valid Prolog variable; furthermore, Prolog renames all the upper-case user defined variables into the underscore-type one automatically for us while executing the code.\\
+As seen before, variables always start with an upper-case letter or an underscore eg \texttt{\_x} is a valid Prolog variable; furthermore, Prolog renames all the upper-case user defined variables into the underscore-type one automatically for us while executing the code.\\
 We can also use anonymous variable - underscore, and the value of that variable is not output when Prolog answeres the question:
 \begin{lstlisting}
 ?- parent(X, _).
@@ -55,7 +55,7 @@ date(13, july, 2013).
 \subsection{Lists}
 \emph{List} is a simple data structure, a sequence of any number of items. In Prolog a typical list can be written like that: 
 \begin{lstlisting}
-[ 1, 2, dog, sun ]
+[1, 2, dog, sun]
 \end{lstlisting}
 and, of course, this is just a syntactical sugar for 
 \begin{lstlisting}
@@ -77,13 +77,13 @@ List = [1 | Tail]
 \end{lstlisting}
 In Prolog lists are handled as a binary trees, thus it accepts lists in different formats:
 \begin{lstlisting}
-[ 1, 2, ...]
-[ Head | Tail ]
-[ 1, 2, ... | Other ]
+[1, 2, ...]
+[Head | Tail]
+[1, 2, ... | Other]
 \end{lstlisting}
 
 \subsection{Operators}
-We cab define new operators by inserting some kind of clauses, called \emph{directives}. For example, we may want to define the operator \texttt{has} for our rule \texttt{Alex has info.},
+We can define new operators by inserting certain kinds of clauses, called \emph{directives}. For example, we may want to define the operator \texttt{has} for our rule \texttt{Alex has info.},
 this can be done by defining the directive:
 \begin{lstlisting}
 :- op(300, xfx, has).
@@ -105,7 +105,7 @@ member(X, [X | Xs]).
 member(X, [Y | Ys]) :-
   member(X, Ys).
 \end{lstlisting}
-Although such implementation is not ideal, because if X occurs several times then any occurrence can be found. We can change \texttt{member} in a way that the program will stop after the first occurrence of X:
+But such an implementation is not ideal, because if X occurs several times then any occurrence can be found. We can change \texttt{member} in a way such that the program will stop after the first occurrence of X:
 \begin{lstlisting}
 member(X, [X | Xs]) :- !.
 member(X, [Y | Ys]) :-
@@ -117,7 +117,7 @@ This program will generate just one solution, eg:
   X = 1;
   no
 \end{lstlisting}
-I found the cut being very useful for even such a simple rule as \texttt{not}:
+I found the cut being very useful even for a simple rule like \texttt{not}:
 \begin{lstlisting}
 not(A) :-
   A, !, fail ; true.
@@ -125,7 +125,7 @@ not(A) :-
 
 
 \subsection{Practice}
-Using the basic concepts introduces so far let us write a few basic rules:
+Using the basic concepts introduced so far let us write a few basic rules:
 \begin{lstlisting}
 factorial:
 fac(N) :- fac(N, 1).
@@ -154,8 +154,8 @@ A lot more examples such a sudoku solver etc can be found on my github page \url
 
 \subsection{Basic Idea}
 
-\emph{Inductive Logic Programming}, in future \emph{ILP} is an approach to machine learning.\\
-In ILP the definitions of relations are deduced from example, which means that the programs are automatically constructed from the set of examples.\\
+\emph{Inductive Logic Programming}, from here on referred to as \emph{ILP}, is an approach to machine learning.\\
+In ILP the definitions of relations are deduced from examples, which means that a program is automatically constructed from a set of examples.\\
 It is a framework that allows a programmer to define examples and some background knowledge instead of writing the programs directly.\\\\
 Typical ILP problem formulation:\\Given:
 \begin{enumerate}
@@ -176,12 +176,12 @@ An ILP task is defined as \emph{$\langle E, B, L_H\rangle$} where \emph{E} is a 
 \subsection{HYPER}
 \paragraph{}
 \textbf{Idea}\\
-With some help I managed to develop a HYPER program (\emph{Hyp}othesis refin\emph{er}), which constructs Prolog programs through refinement of starting hypotheses. \\ This is done by searching a space of possible hypothesis and their refinements. The main idea is to take hypothesis \emph{$H_1$} and produce a more specific hypothesis \emph{$H_2$} such that $H_2 \subset H_1$.\\
-Such space of hypothesis and their refinements is called a \emph{refinement graph}.\\Having build the graph the learning problem is diminished to searching this graph (searching from the over-general hypothesis to the most complete and consistent one).\\
-An important point is that each successor of a hypothesis in the graph only covers the subset of the cases covered by the predecessor. So it explains that during the search we only consider complete hypotheses, as an incomplete hypothesis cannot be refined into a complete one.
+With some help I managed to develop a HYPER program (\emph{Hyp}othesis refin\emph{er}), which constructs Prolog programs through refinement of starting hypotheses. \\ This is done by searching a space of possible hypotheses and their refinements. The main idea is to take a hypothesis \emph{$H_1$} and produce a more specific hypothesis \emph{$H_2$} such that $H_2 \subset H_1$.\\
+Such a set of hypotheses and their refinements is called a \emph{refinement graph}.\\Having built the graph the learning problem is reduced to searching this graph (searching from the over-general hypothesis to the most complete and consistent one).\\
+An important point is that each successor of a hypothesis in the graph only covers the subset of the cases covered by the predecessor. This explains why during the search we only consider complete hypotheses, as an incomplete hypothesis cannot be refined into a complete one.
 \paragraph{}
 \textbf{Search}\\
-We start the search with a set of start hypotheses. The refinement graph is considered to be a free, and as the search starts with multiple start hypotheses, they become the roots of search trees. Therefore the search space we defined is just a set of trees. I have implemented best-first search by using a helper function that considers the size of a hypothesis and its accuracy(with respect to example set)
+We start the search with a set of start hypotheses. The refinement graph is considered to be a tree, and as the search starts with multiple start hypotheses, they become the roots of search trees. Therefore the search space we defined is just a set of trees. I have implemented best-first search by using a helper function that considers the size of a hypothesis and its accuracy with respect to an example set.
 \begin{lstlisting}
 Cost(H) = 10*#literals(H) + #variables(H) + 10*#negativeEgs(H)
 \end{lstlisting} 
@@ -189,7 +189,7 @@ Full HYPER implementation can be found on \href{https://github.com/vitpro/ilp_al
 
 \paragraph{}
 \textbf{Examples}\\
-As for example I tried to implement insertion sort learning. The output produced:
+As an example I tried to implement insertion sort learning. The output produced:
 \begin{lstlisting}
 Hypotheses generated: 3658
 Hypotheses refined:   274
@@ -198,9 +198,14 @@ To be refined:        412
 sort([],[]).
 sort([A|B],D) :-
   sort(B,C),
-  insert_sorted(A,C,D).
-  
+  insert_sorted(A,C,D).  
 \end{lstlisting} 
 
+\section{Abductive Logic Programming}
+\emph{ALP} is a framework for ILP that is based on abductive reasoning. The solutions for ALP task can be mapped back to solutions of the original ILP task.
+\paragraph{}
+\textbf{Abductive reasoning}\\
+In the reasoning process abduction derives potential explanations based on observations, where induction helps to develop generalization of a given concept.\\
+The similarity between generalization and conclusion proposes that the two processes are correlative.
 
 \end{document}
