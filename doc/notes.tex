@@ -1,5 +1,7 @@
 \documentclass[11pt]{article}
 
+\usepackage{listings}
+\usepackage{hyperref}
 \usepackage{fullpage}
 
 \begin{document}
@@ -14,10 +16,191 @@
 
 \section{Prolog}
 
-\paragraph{}
+\subsection{Basics}
 
-Based on rules, ie \texttt{dog(a).} means the fact \texttt{'a is a dog'}.
-Rules can be derived from other rules by implications \texttt{ :- } or, more naturally,  $\leftarrow$. For example we can write \texttt{animal(A) :- dog(A).}, which would mean \texttt{A is an animal $\leftarrow$ A is a dog}. Worth mentioning that A is a variable, meaning that $\forall A$ : $A$ is a dog $\rightarrow$ $A$ is an animal.
+\begin{itemize}
+  \item Based on rules, ie \texttt{dog(a).} means the fact \texttt{'a is a dog'}.
+  \item Rules can be derived from other rules by implications \texttt{ :- } or, more naturally,  $\leftarrow$. For example we can write \texttt{animal(A) :- dog(A).}, which would mean \texttt{A is an animal $\leftarrow$ A is a dog}.
+  \item Worth mentioning that A is a variable, meaning that $\forall A$ : $A$ is a dog $\rightarrow$ $A$ is an animal.
+  \item We can write a more complex rules by using $\wedge$, which in Prolog syntax is just a comma. For example: \texttt{sister(X, Y) :- parent(Z, X), parent(Z, Y), female(X).} in first-order logic will look like $\forall x \forall y \forall z$ : sister(X,Y) $\leftarrow$ parent(Z, X) $\wedge$ parent(Z, Y) $\wedge$ female(X)
+\end{itemize}
+
+\subsection{Recursion}
+We may want to define some more complex family relations, like \texttt{grandparent(X,Z) :- parent(X, Y), parent(Y, Z).}, but what about grand-grand parent etc \ldots ? Luckily, Prolog allows us to use recursive definitions; let us define \texttt{predecessor}:
+\begin{lstlisting}
+predecessor(X, Z) :-
+  parent(X, Z).
+predecessor(X, Z) :-
+  parent(X, Y),
+  predecessor(Y, Z).
+\end{lstlisting}
+Notice that the base case is necessary if X is a direct parent of Z.\\Also, we need to be careful of infinite looping, as the rule \texttt{r(A) :- r(A).}, for example, is quite dangerous.
+
+\subsection{Variables}
+As seen before, variables always start with an upper-case letter or and underscore eg \texttt{\_x} is a valid Prolog variable; furthermore, Prolog renames all the upper-case user defined variables into the underscore-type one automatically for us while executing the code.\\
+We can also use anonymous variable - underscore, and the value of that variable is not output when Prolog answeres the question:
+\begin{lstlisting}
+?- parent(X, _).
+\end{lstlisting}
+will ask whether X is a parent of anybody.
+
+\subsection{Structures}
+We can define some structures like \texttt{date(Day, Month, Year).}, as it is easy to make queries on that format, eg:
+\begin{lstlisting}
+date(13, july, 2013).
+?- date(Day, july, 2013).
+   Day = 13.
+\end{lstlisting}
+
+\subsection{Lists}
+\emph{List} is a simple data structure, a sequence of any number of items. In Prolog a typical list can be written like that: 
+\begin{lstlisting}
+[ 1, 2, dog, sun ]
+\end{lstlisting}
+and, of course, this is just a syntactical sugar for 
+\begin{lstlisting}
+.( 1, .(2, .(dog, .(sun, []))))
+\end{lstlisting} 
+It is also possible to have nested lists
+\begin{lstlisting}
+[I, [am, [nested]]]
+\end{lstlisting}
+In addition, there is a very useful feature that allows us to split list into \emph{Head and Tail}:
+\begin{lstlisting}
+List = [1, 2, 3]
+Tail = [2, 3]
+-> List = .(1, Tail)
+\end{lstlisting}
+or in bracket notation:
+\begin{lstlisting}
+List = [1 | Tail]
+\end{lstlisting}
+In Prolog lists are handled as a binary trees, thus it accepts lists in different formats:
+\begin{lstlisting}
+[ 1, 2, ...]
+[ Head | Tail ]
+[ 1, 2, ... | Other ]
+\end{lstlisting}
+
+\subsection{Operators}
+We cab define new operators by inserting some kind of clauses, called \emph{directives}. For example, we may want to define the operator \texttt{has} for our rule \texttt{Alex has info.},
+this can be done by defining the directive:
+\begin{lstlisting}
+:- op(300, xfx, has).
+\end{lstlisting}
+where 300 is the precedence and \texttt{xfx} means the infix operator.\\\\
+There are three groups of operators:
+\begin{enumerate}
+\item infix operators: \texttt{xfx, xfy, yfx}
+\item prefix operators: \texttt{fx. fy}
+\item postfix operators: \texttt{xf, yf}
+\end{enumerate}
+where \texttt{f} represents the operator and \texttt{x} and \texttt{y} represent arguments.
+
+\subsection{Cut}
+Prolog automatically backtracks for us if this is necessary for satisfying the goal, although we may want to control that by preventing backtracking. We can do this by using \texttt{cut} function, or just \texttt{!}.\\\\
+For me, the easiest way of understanding this concept is to use an example. Lets imagine that we have a relation \texttt{member(X, L).} which will check whether X is in list L. This program would look like:
+\begin{lstlisting}
+member(X, [X | Xs]).
+member(X, [Y | Ys]) :-
+  member(X, Ys).
+\end{lstlisting}
+Although such implementation is not ideal, because if X occurs several times then any occurrence can be found. We can change \texttt{member} in a way that the program will stop after the first occurrence of X:
+\begin{lstlisting}
+member(X, [X | Xs]) :- !.
+member(X, [Y | Ys]) :-
+  member(X, Ys).
+\end{lstlisting}
+This program will generate just one solution, eg:
+\begin{lstlisting}
+?- member(X, [1, 2, 3]).
+  X = 1;
+  no
+\end{lstlisting}
+I found the cut being very useful for even such a simple rule as \texttt{not}:
+\begin{lstlisting}
+not(A) :-
+  A, !, fail ; true.
+\end{lstlisting}
+
+
+\subsection{Practice}
+Using the basic concepts introduces so far let us write a few basic rules:
+\begin{lstlisting}
+factorial:
+fac(N) :- fac(N, 1).
+fac(0, P) :- write(P).
+fac(N, P) :- N>0, M is N-1, K is N * P, fac(M, K).
+
+list concatenation:
+conc([ ], L, L).
+conc([ X | L1 ], L2, [ X | L3 ]) :- 
+  conc(L1, L2, L3).
+
+calculation the length of the list:
+length(L, N) :-
+  length(L, 0, N).
+length([], N, N).
+length([_ | L], N0, N) :-
+  N1 is N0+1,
+  length(L, N1, N).
+
+etc...
+\end{lstlisting}
+A lot more examples such a sudoku solver etc can be found on my github page \url{https://github.com/vitpro/ilp_alp_tal/tree/master/src}
+
+
+\section{Inductive Logic Programming}
+
+\subsection{Basic Idea}
+
+\emph{Inductive Logic Programming}, in future \emph{ILP} is an approach to machine learning.\\
+In ILP the definitions of relations are deduced from example, which means that the programs are automatically constructed from the set of examples.\\
+It is a framework that allows a programmer to define examples and some background knowledge instead of writing the programs directly.\\\\
+Typical ILP problem formulation:\\Given:
+\begin{enumerate}
+\item A set of positive \emph{$E_+$} and negative \emph{$E_-$} examples
+\item Background knowledge \emph{B}, represented as a set of logic formulas, such that the examples \emph{$E_+$} cannot be derived from \emph{B}
+\end{enumerate}
+Find:\\
+A hypothesis \emph{H}, represented as a set of logic formulas, such that:
+\begin{enumerate}
+\item All examples in \emph{$E_+$} can be derived from \emph{B} and \emph{H}
+\item No examples in \emph{$E_-$} can be derived from \emph{B} and \emph{H}
+\end{enumerate}
+More precisely:
+\\
+An ILP task is defined as \emph{$\langle E, B, L_H\rangle$} where \emph{E} is a set of examples, \emph{B} is a background knowledge and \emph{$L_H$} set of logic theories, called language bias.\\
+\emph{H} is a hypothesis for a given ILP task \emph{$\langle E, B, L_H\rangle$ iff H $\in L_H$, and B $\cup$ H $\models$ E}. 
+
+\subsection{HYPER}
+\paragraph{}
+\textbf{Idea}\\
+With some help I managed to develop a HYPER program (\emph{Hyp}othesis refin\emph{er}), which constructs Prolog programs through refinement of starting hypotheses. \\ This is done by searching a space of possible hypothesis and their refinements. The main idea is to take hypothesis \emph{$H_1$} and produce a more specific hypothesis \emph{$H_2$} such that $H_2 \subset H_1$.\\
+Such space of hypothesis and their refinements is called a \emph{refinement graph}.\\Having build the graph the learning problem is diminished to searching this graph (searching from the over-general hypothesis to the most complete and consistent one).\\
+An important point is that each successor of a hypothesis in the graph only covers the subset of the cases covered by the predecessor. So it explains that during the search we only consider complete hypotheses, as an incomplete hypothesis cannot be refined into a complete one.
+\paragraph{}
+\textbf{Search}\\
+We start the search with a set of start hypotheses. The refinement graph is considered to be a free, and as the search starts with multiple start hypotheses, they become the roots of search trees. Therefore the search space we defined is just a set of trees. I have implemented best-first search by using a helper function that considers the size of a hypothesis and its accuracy(with respect to example set)
+\begin{lstlisting}
+Cost(H) = 10*#literals(H) + #variables(H) + 10*#negativeEgs(H)
+\end{lstlisting} 
+Full HYPER implementation can be found on \href{https://github.com/vitpro/ilp_alp_tal/blob/master/src/hyper.pl}{github}.
+
+\paragraph{}
+\textbf{Examples}\\
+As for example I tried to implement insertion sort learning. The output produced:
+\begin{lstlisting}
+Hypotheses generated: 3658
+Hypotheses refined:   274
+To be refined:        412
+
+sort([],[]).
+sort([A|B],D) :-
+  sort(B,C),
+  insert_sorted(A,C,D).
+  
+\end{lstlisting} 
 
 
 \end{document}
