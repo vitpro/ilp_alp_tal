@@ -97,7 +97,39 @@ There are three groups of operators:
 \end{enumerate}
 where \texttt{f} represents the operator and \texttt{x} and \texttt{y} represent arguments.
 
-\subsection{Cut}
+\subsection{Backtracking and Cut}
+\textbf{Backtracking}\\
+We can also have backtracking in rules. For example consider the following program:
+\begin{lstlisting}
+hold_party(X):-
+  birthday(X),
+  happy(X).
+  
+birthday(tom).
+birthday(fred).
+birthday(helen).
+
+happy(mary).
+happy(jane).
+happy(helen).
+\end{lstlisting}
+If we now pose the query:
+\begin{lstlisting}
+?- hold_party(Who).
+\end{lstlisting}
+In order to solve the above, Prolog first attempts to find a clause of birthday, 
+it being the first subgoal of birthday. This binds X to tom.
+ We then attempt the goal \texttt{happy(tom)}. This will fail, since it doesn't match t
+ he above database. As a result, Prolog backtracks. This means that Prolog goes
+  back to its last choice point and sees if there is an alternative solution. 
+  In this case, this means going back and attempting to find another clause of birthday. 
+  This time we can use clause two, binding X to fred. This then causes 
+  us to try the goal \texttt{happy(fred)}. Again this will fail to match our database.
+   As a result, we backtrack again. This time we find clause three of birthday,
+    and bind X to helen, and attempt the goal \texttt{happy(helen)}. This goal matches 
+    against clause 3 of our happy database. As a result, \texttt{hold\_party} will succeed 
+    with \texttt{X=helen.}\\\\
+\textbf{Cut}\\
 Prolog automatically backtracks for us if this is necessary for satisfying the goal, although we may want to control that by preventing backtracking. We can do this by using \texttt{cut} function, or just \texttt{!}.\\\\
 For me, the easiest way of understanding this concept is to use an example. Lets imagine that we have a relation \texttt{member(X, L).} which will check whether X is in list L. This program would look like:
 \begin{lstlisting}
