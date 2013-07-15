@@ -59,7 +59,7 @@ date(13, july, 2013).
 \end{lstlisting}
 and, of course, this is just a syntactical sugar for 
 \begin{lstlisting}
-.( 1, .(2, .(dog, .(sun, []))))
+.(1, .(2, .(dog, .(sun, []))))
 \end{lstlisting} 
 It is also possible to have nested lists
 \begin{lstlisting}
@@ -69,17 +69,17 @@ In addition, there is a very useful feature that allows us to split list into \e
 \begin{lstlisting}
 List = [1, 2, 3]
 Tail = [2, 3]
--> List = .(1, Tail)
+-> List = .(1,Tail)
 \end{lstlisting}
 or in bracket notation:
 \begin{lstlisting}
-List = [1 | Tail]
+List = [1|Tail]
 \end{lstlisting}
 In Prolog lists are handled as a binary trees, thus it accepts lists in different formats:
 \begin{lstlisting}
 [1, 2, ...]
-[Head | Tail]
-[1, 2, ... | Other]
+[Head|Tail]
+[1, 2,...|Other]
 \end{lstlisting}
 
 \subsection{Operators}
@@ -180,6 +180,118 @@ length([_ | L], N0, N) :-
 etc...
 \end{lstlisting}
 A lot more examples such as sudoku solver etc can be found on my github page \url{https://github.com/vitpro/ilp_alp_tal/tree/master/src}
+
+
+\section{Answer Set Programming}
+
+\subsection{Basics and tools used}
+\emph{Answer Set Programming} or \emph{ASP} is a form of declarative programming based on stable model semantics of logic programming.  
+The following tools were suggested:
+
+\begin{description}
+  \item[gringo] \hfill \\
+  Grounder capable of translating logic programs provided by the programmer into equivalent ground programs
+  \item[clasp] \hfill \\
+  Solver for the grounded programs computed by gringo, producing answer sets
+  \item[clingo] \hfill \\
+  Bounds \texttt{gringo} and \texttt{clasp}, taking a logic program as an input and producing answer sets an an output. 
+\end{description}
+
+\subsection{Comparison: Clingo and Prolog}
+As in Prolog, syntax is very similar, as they both represent logic programming.
+Typical ASP program is a collection of:
+\begin{itemize}
+\item \textbf{Facts:} $A_0.$
+\item \textbf{Rules:} $A_0 $ :- $ L_0,...,L_n.$
+\item \textbf{Integrity Constants:} $ $ :- $ L_0,...,L_n.$
+\end{itemize}
+Where $A_0$ is an \emph{atom}, and any of $L_i$'s are \emph{literals}.\\
+The set $\{L_0,...,L_n\}$ is called the \emph{body} of the rule. Facts have an empty body.\\
+
+\textbf{Negation}\\
+In ASP the predicate \texttt{not} can also be represented as \texttt{'-'}. Semantically, $-A$ will just be a new atom, where $A \cup -A \models {\O}$.\\
+
+\textbf{Disjunction}\\
+Additionally, there is a disjunction connective \texttt{'|'} in ASP. Disjunction is true if at least one of its atoms is true. For example: \texttt{a | b.} will produce two answer sets $\{a\}$ and $\{b\}$. I understand it as \emph{or}.\\
+
+\textbf{Assignments}\\
+Differently to Prolog, where assignments are implemented as an infix operator \texttt{is}, ASP provides us different notation of \texttt{:-}. There is also a comparison predicate \texttt{==}.\\ Worth mentioning that assignments \emph{bind} variables, which excludes the cases containing looped assignments. For example, the code \texttt{r(A) :- A = B, B = A.} is rejected by \texttt{gringo}.\\
+
+\textbf{Intervals}\\
+There is a very neat approach to interval representations. This is easy to understand from an example: \texttt{number(1..9).} will mean all numbers from 1 to 9 inclusive.\\Another handy feature is \emph{pooling}, which means that instead of writing \texttt{rule(a). rule(b). rule(c).} we can write \texttt{rule(a;b;c).}\\
+
+\textbf{Conditions}\\
+Conditions can be represented by \texttt{':'} symbol. Lets consider the following program:
+\begin{lstlisting}
+day(mon). day(tue). day(wed). day(thu). day(fri). day(sat). day(sun).
+weekend(sat). weekend(sun).
+that(X) : day(X) :- doSomething.
+weekdays :- day(X) : day(X) : not weekend(X).
+\end{lstlisting}
+In my understanding, \texttt{':'} is somehow similar to 
+\texttt{foreach} statements from most imperative programming languages. 
+Lets consider the line \texttt{that(X) : day(X) :- doSomething.} 
+Essentially, it just means 
+\texttt{that(mon) | that(tue) | that(wed) | that(thu) | that(fri) | that(sat) | that(sun) :- doSomething.}\\
+More interesting example is \texttt{weekdays :- day(X) : day(X) : not weekend(X).} allowing us to use the same atom, \texttt{day(X)}, twice. Gringo simplifies out code to this:  \texttt{weekdays :- day(mon), day(tue), day(wed), day(thu), day(fri).} which is probably easier to read and understand.\\
+
+\textbf{Aggregates}\\
+ASP allows us to do operation on sets of literals that evaluates to some values. The aggregate has the following format: $l$\texttt{ op }$[L_0 = \omega_0 , ... , L_n = \omega_n] \upsilon$, where $l$ and $\upsilon$ are lower and upper bounds respectively, operator \texttt{op} and a set of weighted literals $L_i$. Of course, the use of $l$ and $\upsilon$ is entirely optional.\\
+Here are a few examples using such aggregates:\\
+\begin{lstlisting}
+1 #count {a,a, not b,not b} 1.
+2 #sum [a, not b, c=2] 3
+etc...
+\end{lstlisting}
+Note that \texttt{\#count} requires curly brackets as there must be no weighted literals within an aggregate.\\
+
+\textbf{Meta Statements}\\
+In order to make the language more flexible there are meta statements introduced in ASP. There is a short list of them:
+\begin{description}
+  \item[Comments] \hfill \\
+  \begin{lstlisting}
+rule(1). % here is a comment
+%*
+commented_rule
+*%
+  \end{lstlisting}
+  \item[Hiding predicates] \hfill \\
+  \texttt{\#hide} is useful to hide information you don't want to display
+  \begin{lstlisting}
+#hide.               % Suppress all atoms in output
+#hide p/3.           % Suppress all atoms of predicate p/3 in output
+#hide p(X,Y) : q(X). % Supress p/3 if the condition holds
+  \end{lstlisting}
+  In order to selectively include the atoms of a certain predicate in the output, we can use the \texttt{\#show} declarative.
+  \begin{lstlisting}
+#show p/3.           % Include all atoms of predicate p/3 in output
+#show(X,Y) : q(X).   % Include p/3 if the condition holds
+  \end{lstlisting}
+  \item[Use of constants] \hfill \\
+  Constants are just place holders for concrete values provided by a user. 
+  By using the \texttt{\#const} declarative we can define a default value to be
+inserted for a constant:
+   \begin{lstlisting}
+#const a = 15.
+#const g = f(a,b).
+  \end{lstlisting}
+  \item[Lua code snippets] \hfill \\
+  Ability to include scripting language inside logic programs can be very useful, 
+  if used correctly (accessing the database, for example). 
+  It is done by writing \texttt{\#begin\_lua} and \texttt{\#end\_lua.}, 
+  and having your Lua code in between the tags. We can refer to our Lua snippet via \texttt{@} operator:
+     \begin{lstlisting}
+#begin_lua
+function gcd(a, b)
+  if a == 0 then return b
+  else return gcd(b % a, a)
+  end
+end
+#end_lua.
+
+gcd(X,Y,@gcd(X,Y)) :- f(X,Y).
+  \end{lstlisting}
+\end{description}
 
 
 \section{Inductive Logic Programming}
