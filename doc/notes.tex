@@ -197,7 +197,7 @@ The following tools were suggested:
   Bounds \texttt{gringo} and \texttt{clasp}, taking a logic program as an input and producing answer sets an an output. 
 \end{description}
 
-\subsection{Comparison: Clingo and Prolog}
+\subsection{ASP features and comparison to Prolog}
 As in Prolog, syntax is very similar, as they both represent logic programming.
 Typical ASP program is a collection of:
 \begin{itemize}
@@ -207,6 +207,8 @@ Typical ASP program is a collection of:
 \end{itemize}
 Where $A_0$ is an \emph{atom}, and any of $L_i$'s are \emph{literals}.\\
 The set $\{L_0,...,L_n\}$ is called the \emph{body} of the rule. Facts have an empty body.\\
+
+I will now give a brief description of some functionality which is mostly not featured in Prolog.\\
 
 \textbf{Negation}\\
 In ASP the predicate \texttt{not} can also be represented as \texttt{'-'}. Semantically, $-A$ will just be a new atom, where $A \cup -A \models {\O}$.\\
@@ -292,7 +294,15 @@ end
 gcd(X,Y,@gcd(X,Y)) :- f(X,Y).
   \end{lstlisting}
 \end{description}
-
+\textbf{Examples}\\
+As for example I tried implementing TSP problem. From a small weighted graph consisting 4 nodes I got the following result:
+\begin{lstlisting}
+vit@vitLaptop:~/programming/urop/src$ clingo -n 0 tsp.lp 
+Answer: 1
+loop(4,3) loop(3,1) loop(2,4) loop(1,2) 
+SATISFIABLE
+\end{lstlisting}
+Code can be found on \href{https://github.com/vitpro/ilp_alp_tal/tree/master/src}{github}.
 
 
 \section{Inductive Logic Programming}
