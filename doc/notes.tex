@@ -6,7 +6,7 @@
 
 \begin{document}
 
-\title{Notes: Prolog, ILP, ALP, TAL, ASP and examples}
+\title{Notes: Prolog, ILP, ALP, TAL, ASP and examples. Simulators.}
 
 \author{Vitalii Protsenko}
 
@@ -323,10 +323,10 @@ A hypothesis \emph{H}, represented as a set of logic formulas, such that:
 \item All examples in \emph{$E_+$} can be derived from \emph{B} and \emph{H}
 \item No examples in \emph{$E_-$} can be derived from \emph{B} and \emph{H}
 \end{enumerate}
-More precisely:
+\emph{More precisely:
 \\
 An ILP task is defined as \emph{$\langle E, B, L_H\rangle$} where \emph{E} is a set of examples, \emph{B} is a background knowledge and \emph{$L_H$} set of logic theories, called language bias.\\
-\emph{H} is a hypothesis for a given ILP task \emph{$\langle E, B, L_H\rangle$ iff H $\in L_H$, and B $\cup$ H $\models$ E}. 
+\emph{H} is a hypothesis for a given ILP task \emph{$\langle E, B, L_H\rangle$ iff H $\in L_H$, and B $\cup$ H $\models$ E}.} 
 
 \subsection{HYPER}
 \paragraph{}
@@ -357,6 +357,78 @@ sort([A|B],D) :-
 \end{lstlisting} 
 
 \section{Abductive Logic Programming}
-\emph{ALP} is a framework for ILP that is based on abductive reasoning.
+\emph{ALP} is a framework for ILP that is based on abductive reasoning. The solutions for the ALP task can be mapped back to solutions of the original ILP problem. \\
+There are a lot of relations between abductive and inductive reasoning, where abduction is the reasoning process that derives possible explanations from observations(in other words, makes assumptions that would lead to solving the given goal). Induction, on the other hand, derives generalisations of a concept from given known rules.\\
+
+\textbf{ALP task}\\
+Here I will try to define ALP task in easy words. Let's consider the following program:
+\begin{lstlisting}
+a :- b, c.
+b :- i, j.
+i :- c.
+j. 
+\end{lstlisting} 
+Ans support we want to find \texttt{a}. We will run a query 
+\begin{lstlisting}
+?- a. 
+\end{lstlisting}
+So the Prolog will try to find the solution by doing the following:
+\begin{lstlisting}
+        ?- a.
+          |
+       ?- b, c.
+          |
+      ?- i, j, c.
+          |
+      ?- c, j, c.
+          |
+       ?- j, c.
+\end{lstlisting} 
+At this point Prolog knows that \texttt{j} is true, but it has no \texttt{c}. ALP provides us with ability to assume it, and generate the set of such assumptions. In our case the set will just be \texttt{[c]}.\\
+
+\emph{More formally: given a program $\Pi$ and a goal to reach $\Gamma$, then $\Delta$ is an abductive solution for the ALP task if $\Pi \cup \Delta \models \Gamma$}.
+
+\section{Top-direct Abductive Learning}
+Top-direct Abductive Learning, or \emph{TAL} is also an ILP system, that builds on transformations. \\
+Results from the transformations and abductive reasoning enables learning with negation as failure as well as recursive learning. Also, this system guarantees completeness, as it is restricted by the underlying abductive system. Also, in TAL positive and negative examples are treated symmetrically. \\
+With respect to other ILP tool TAL provides the following notable
+features:
+\begin{itemize}
+\item It supports non-monotonic learning
+\item Can be used to perform theory revision
+\item Uses configurable heuristics in the search
+\item Is complete, i.e. it is able to find a solution if one exists. This implies TAL is able to
+learn recursive and multi-predicate concepts, perform non-observational learning and
+predicate invention
+\item It is easily debuggable, providing a graphical representation of the search
+\end{itemize}
+
+TAL algorithm works the following way: \\
+\texttt{Given}: \emph{B} background theory, \emph{$E_+$} and \emph{$E_-$} positive and negative examples, \emph{I} integrity constrains and \emph{M} mode declarations.\\
+\texttt{Output}: hypothesis \emph{H}.\\
+\texttt{Algorithm}:\\
+\texttt{$T_M = PRE-PROCESSING(E, B, M)$}\\
+\texttt{$\Delta = ABDUCE(T_M \cup B, I, E)$}\\
+\texttt{$H = POST-PROCESSING(\Delta , M)$}
+
+\paragraph{}
+\textbf{Soundness and Completeness}\\
+
+\emph{Soundness. Let $\langle P, A, I \rangle$ be an abductive program, and $\langle \emptyset , \Delta , \Delta *, C \rangle$ be a solution state for the query q with a $\theta$ substitution, then\\ 
+$ P \cup \Delta \models q\theta$ \\
+and $P \cup \Delta$ is consistent.}\\
+
+\emph {Completeness. Let $\langle P, A, I \rangle$ be an abductive program, and $W$ be a derivation tree for a given query q. If $W$ is finite then:
+  \begin{itemize}
+    \item if all the branches of $W$ are failed, then $P \models \bar{\forall}.(\neg q)$
+    \item if $P \cup \bar{\exists}.q$ is satisfiable, then $W$ contains a successful branch.
+  \end{itemize}
+}
+\paragraph{}
+\textbf{Remarks}\\
+If two solutions $H'$ and $H$ exists for the inductive task such that $H \subset H'$, $H'$ is not guaranteed to be derived as it is not a subset-minimal solution. Although, this does not penalise the system in practice, as the additional rules in $H'$ can be safely removed without affecting the coverage on the examples.
+
+\section{Simulators}
+In this section I will describe the practical aspect of my placement, as I have been proposed to work with traffic simulators and try out to plug real world data(such as tfl or openPath) in order to achieve something interesting(for example, predict what is the best place for the next London underground line, or help people plan their journeys more efficiently. 
 
 \end{document}
